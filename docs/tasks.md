@@ -32,14 +32,14 @@ Status legend: `[ ]` todo · `[~]` in progress · `[x]` done
 
 ## Phase 2 — Domain logic (`src/domain/`, pure, unit-tested)
 
-- [ ] **2.1 Shared types & enums**: notification types, event types, account attributes
-- [ ] **2.2 Visibility cutoff**: `visibilityCutoff(now)` = start of previous UTC calendar month (sent Aug 15 → visible through Sep 30, gone Oct 1)
-- [ ] **2.3 Month key**: `monthKey(now)` → `'YYYY-MM'` in UTC
-- [ ] **2.4 Filter matcher**: `matchesFilter(account, filter)` — empty multi-select = all; min/max credits inclusive & optional (min=max covers "=3")
-- [ ] **2.5 Event go-live**: `visible_at = occurredAt + delay_days` (none/0 → immediate); AUDIOBOOK_PREORDER → `publicationDate`, ignoring delay
-- [ ] **2.6 CSV parsing**: split on newlines, trim, drop blanks + non-numeric header row, dedupe with a `Set`
-- [ ] **2.7 Validation** for request bodies: lengths, `link_path` is an internal path, `icon_url` is a URL, `min <= max`, valid enums, `eventId` required
-- [ ] **2.8 Unit tests** for all of the above (month/year boundaries, leap year, delay crossing a month, empty filters, CSV junk lines)
+- [x] **2.1 Shared types & enums**: notification types, event types, account attributes
+- [x] **2.2 Visibility cutoff**: `visibilityCutoff(now)` = start of previous UTC calendar month (sent Aug 15 → visible through Sep 30, gone Oct 1)
+- [x] **2.3 Month key**: `monthKey(now)` → `'YYYY-MM'` in UTC
+- [x] **2.4 Filter matcher**: `matchesFilter(account, filter)` — empty multi-select = all; min/max credits inclusive & optional (min=max covers "=3")
+- [x] **2.5 Event go-live**: `visible_at = occurredAt + delay_days` (none/0 → immediate); AUDIOBOOK_PREORDER → `publicationDate`, ignoring delay
+- [x] **2.6 CSV parsing**: split on newlines, trim, drop blanks + non-numeric header row, dedupe with a `Set`
+- [x] **2.7 Validation** for request bodies: lengths, `link_path` is an internal path, `icon_url` is a URL, `min <= max`, valid enums, `eventId` required
+- [x] **2.8 Unit tests** for all of the above (month/year boundaries, leap year, delay crossing a month, empty filters, CSV junk lines)
 
 ## Phase 3 — Data access (`src/data/`, one repo per file)
 
