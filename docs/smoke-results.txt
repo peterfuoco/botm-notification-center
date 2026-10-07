@@ -1,0 +1,133 @@
+##### 1. Event + replay
+=== 1a event enroll-1
+expect: deliveriesCreated 1
+{"deliveriesCreated":1}
+[HTTP 200]
+
+=== 1b same event again
+expect: deliveriesCreated 0
+{"deliveriesCreated":0}
+[HTTP 200]
+
+=== 1c feed account 1
+expect: one item, isClicked false
+{"items":[{"id":1,"notificationId":1,"iconUrl":"https://cdn.example.com/icons/welcome.png","headline":"Welcome to Book of the Month!","subheadline":"Pick your first book now.","linkPath":"/my-box","sentAt":"2026-10-07T12:00:00.000Z","isClicked":false}],"nextCursor":null}
+[HTTP 200]
+
+##### 2. Filter sweep + clicks
+=== 2a sweep
+expect: filter deliveriesCreated ~5
+{"filterSweep":{"notificationsSwept":1,"deliveriesCreated":5},"cleanup":{"cutoff":"2026-09-01T00:00:00.000Z","deleted":0}}
+[HTTP 200]
+
+=== 2b sweep again
+expect: filter deliveriesCreated 0
+{"filterSweep":{"notificationsSwept":1,"deliveriesCreated":0},"cleanup":{"cutoff":"2026-09-01T00:00:00.000Z","deleted":0}}
+[HTTP 200]
+
+captured DELIVERY_ID=3
+
+=== 2c click as owner
+expect: 204
+
+[HTTP 204]
+
+=== 2d click again as owner
+expect: 204
+
+[HTTP 204]
+
+=== 2e click as account 3
+expect: 404
+{"error":{"code":"NOT_FOUND","message":"Notification 3 not found"}}
+[HTTP 404]
+
+=== 2f feed account 2
+expect: item isClicked true
+{"items":[{"id":3,"notificationId":3,"iconUrl":"https://cdn.example.com/icons/credit.png","headline":"You have credits to spend","subheadline":"Use a credit on this month's picks.","linkPath":"/this-month","sentAt":"2026-10-07T17:09:47.391Z","isClicked":true}],"nextCursor":null}
+[HTTP 200]
+
+##### 3. Delayed event + deactivate
+=== 3a create SHIPPED notification
+{"id":5,"iconUrl":"https://cdn.example.com/s.png","headline":"Your box shipped","subheadline":"Track it","linkPath":"/orders","isActive":false,"removedAt":null,"createdAt":"2026-10-07T17:09:47.493Z","updatedAt":"2026-10-07T17:09:47.493Z","type":"EVENT","eventType":"SHIPPED","delayDays":5}
+
+captured NOTIF_ID=5
+
+=== 3b activate
+expect: 200, active
+{"notification":{"id":5,"iconUrl":"https://cdn.example.com/s.png","headline":"Your box shipped","subheadline":"Track it","linkPath":"/orders","isActive":true,"removedAt":null,"createdAt":"2026-10-07T17:09:47.493Z","updatedAt":"2026-10-07T17:09:47.531Z","type":"EVENT","eventType":"SHIPPED","delayDays":5},"deliveriesCreated":0}
+[HTTP 200]
+
+=== 3c ship event
+expect: deliveriesCreated 1 (pending)
+{"deliveriesCreated":1}
+[HTTP 200]
+
+=== 3d feed account 2
+expect: NO "Your box shipped" yet
+{"items":[{"id":3,"notificationId":3,"iconUrl":"https://cdn.example.com/icons/credit.png","headline":"You have credits to spend","subheadline":"Use a credit on this month's picks.","linkPath":"/this-month","sentAt":"2026-10-07T17:09:47.391Z","isClicked":true}],"nextCursor":null}
+[HTTP 200]
+
+=== 3e deactivate
+expect: pendingCancelled 1
+{"notification":{"id":5,"iconUrl":"https://cdn.example.com/s.png","headline":"Your box shipped","subheadline":"Track it","linkPath":"/orders","isActive":false,"removedAt":null,"createdAt":"2026-10-07T17:09:47.493Z","updatedAt":"2026-10-07T17:09:47.566Z","type":"EVENT","eventType":"SHIPPED","delayDays":5},"pendingCancelled":1}
+[HTTP 200]
+
+##### 4. CSV upload
+=== 4a upload csv
+expect: submitted 3, inserted 2, skipped 1, duplicateCount 1, invalidLines [abc]
+{"submitted":3,"inserted":2,"skipped":1,"duplicateCount":1,"invalidLines":[{"line":6,"value":"abc"}]}
+[HTTP 200]
+
+=== 4b re-upload
+expect: inserted 0
+{"submitted":2,"inserted":0,"skipped":2,"duplicateCount":0,"invalidLines":[]}
+[HTTP 200]
+
+##### 5. Remove from app
+=== 5a feed account 2 before remove
+expect: filter notification present
+{"items":[{"id":3,"notificationId":3,"iconUrl":"https://cdn.example.com/icons/credit.png","headline":"You have credits to spend","subheadline":"Use a credit on this month's picks.","linkPath":"/this-month","sentAt":"2026-10-07T17:09:47.391Z","isClicked":true}],"nextCursor":null}
+[HTTP 200]
+
+=== 5b remove notification 3
+expect: 200
+{"id":3,"iconUrl":"https://cdn.example.com/icons/credit.png","headline":"You have credits to spend","subheadline":"Use a credit on this month's picks.","linkPath":"/this-month","isActive":false,"removedAt":"2026-10-07T17:09:47.610Z","createdAt":"2026-10-01T00:00:00.000Z","updatedAt":"2026-10-07T17:09:47.610Z","type":"FILTER","filter":{"policies":[],"relationshipStatuses":[],"countries":["US"],"minCredits":1,"maxCredits":null}}
+[HTTP 200]
+
+=== 5c feed account 2 after remove
+expect: filter notification GONE
+{"items":[],"nextCursor":null}
+[HTTP 200]
+
+=== 5d activate removed
+expect: 409
+{"error":{"code":"CONFLICT","message":"Notification 3 has been removed"}}
+[HTTP 409]
+
+##### 6. Errors
+=== 6a no admin key
+expect: 401
+{"error":{"code":"UNAUTHORIZED","message":"Missing or invalid X-Admin-Key"}}
+[HTTP 401]
+
+=== 6b activate CSV
+expect: 409
+{"error":{"code":"CONFLICT","message":"CSV notifications are one-time sends and cannot be activated"}}
+[HTTP 409]
+
+=== 6c filter field on EVENT
+expect: 400
+{"error":{"code":"BAD_REQUEST","message":"Not editable on a EVENT notification: countries"}}
+[HTTP 400]
+
+=== 6d malformed JSON
+expect: 400 Malformed JSON body
+{"error":{"code":"BAD_REQUEST","message":"Malformed JSON body"}}
+[HTTP 400]
+
+=== 6e unknown account
+expect: 404
+{"error":{"code":"NOT_FOUND","message":"Account 424242 not found"}}
+[HTTP 404]
+

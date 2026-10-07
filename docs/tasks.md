@@ -100,12 +100,12 @@ Member:
 
 ## Phase 7 — README & delivery
 
-- [ ] **7.1 Setup**: Docker, `db:reset`, run, test; API reference with curl examples
-- [ ] **7.2 Workflow**: approach, what was delegated to AI, pushback, by-hand work (from `docs/AI_LOG.md`)
-- [ ] **7.3 Architecture & tradeoffs**: materialized deliveries + `visible_at` instead of a scheduler, `dedupe_key` + `INSERT IGNORE` for idempotency, injected clock, UTC everywhere, single schema file
-- [ ] **7.4 Concerns**: filter freshness depends on how often the sweep runs; large CSV → one big `IN (...)`; hand-written Kysely types can drift from `schema.sql`; no route-level tests
-- [ ] **7.5 Assumptions**: everything in Decisions below
-- [ ] **7.6 Production gaps**: real auth, scheduled cron (EventBridge/ECS) for sweep + cleanup, queue for large fan-out, migrations tool, observability, rate limiting, read replicas, partitioning for retention
+- [x] **7.1 Setup**: Docker, `db:reset`, run, test; API reference with curl examples
+- [x] **7.2 Workflow**: approach, what was delegated to AI, pushback, by-hand work (from `docs/AI_LOG.md`)
+- [x] **7.3 Architecture & tradeoffs**: materialized deliveries + `visible_at` instead of a scheduler, `dedupe_key` + `INSERT IGNORE` for idempotency, injected clock, UTC everywhere, single schema file
+- [x] **7.4 Concerns**: filter freshness depends on how often the sweep runs; large CSV → one big `IN (...)`; hand-written Kysely types can drift from `schema.sql`; no route-level tests
+- [x] **7.5 Assumptions**: everything in Decisions below
+- [x] **7.6 Production gaps**: real auth, scheduled cron (EventBridge/ECS) for sweep + cleanup, queue for large fan-out, migrations tool, observability, rate limiting, read replicas, partitioning for retention
 - [ ] **7.7 Final pass**: typecheck, lint, tests green; push to public GitHub repo
 
 ---
@@ -127,6 +127,6 @@ Member:
 - **CSV**: raw `text/csv` body, no multipart.
 - **DB layer**: Kysely + mysql2.
 - **Auth**: stubbed — `X-Admin-Key` (admin), `X-Account-Id` (member).
-- **Testing**: Vitest; unit tests for pure logic + one integration test. No supertest.
+- **Testing**: Vitest; unit tests for pure logic + integration tests against a throwaway MySQL DB (`repositories.test.ts`, `services.test.ts`). No supertest; routes verified with a manual curl pass.
 - **Timestamps**: API returns ISO `sentAt`; frontend formats "5 minutes ago".
 - **Images**: URL string only.

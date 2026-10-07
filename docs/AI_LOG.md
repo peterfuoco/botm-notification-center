@@ -2,3 +2,5 @@
 2. Initial scope had ~50 tasks plus additional open questions, pushed back to trim scope for project and documented decisions at end of tasks md. Chose a test DB approach, with only essential testing (logic, 1 integration test) to get started
 3. After Phase 1, checked claude's schema fix as it let NULL filter arrays through, the fix is approved
 4. In Phase 3 I noticed account_id was missing in filter in markDeliveryClicked. It only filtered by id so any member could mark a delivery as clicked (by guessing an ID, an edge case but should be guarded against). Added more rules about scope to claude md due to scope creep.
+5. Phase 5, i noticed claude built a few extra things and flagged extras for approval. However these were small (ie POST /events reusing admin key, limit/offset, err handling)
+6. Phase 6, I did a clean reset of dev server and ran smoke.sh test against the 24 checks i.e event replay, monthly filter, click ownership, delayed event cancellation, CSV counts, remove-from-app, and err codes. All matched expectations
