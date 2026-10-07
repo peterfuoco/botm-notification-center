@@ -19,16 +19,16 @@ Status legend: `[ ]` todo · `[~]` in progress · `[x]` done
 
 ## Phase 1 — Schema (`db/schema.sql`, single file, no migration runner)
 
-- [ ] **1.1 `accounts`**: `id`, `country` (US/CA), `policy` (MONTHLY/ANNUAL), `relationship_status` (NEW_MEMBER/FRIEND/BFF), `credits` (int), `created_at`, `updated_at`
-- [ ] **1.2 `notifications`** (admin-defined template): `id`, `type` (EVENT/FILTER/CSV), `icon_url`, `headline`, `subheadline`, `link_path`, `is_active`, `removed_at` (nullable), `created_at`, `updated_at`
+- [x] **1.1 `accounts`**: `id`, `country` (US/CA), `policy` (MONTHLY/ANNUAL), `relationship_status` (NEW_MEMBER/FRIEND/BFF), `credits` (int), `created_at`, `updated_at`
+- [x] **1.2 `notifications`** (admin-defined template): `id`, `type` (EVENT/FILTER/CSV), `icon_url`, `headline`, `subheadline`, `link_path`, `is_active`, `removed_at` (nullable), `created_at`, `updated_at`
   - EVENT: `event_type` (SHIPPED/ENROLLED/AUDIOBOOK_PREORDER), `delay_days` (nullable)
   - FILTER: `filter_policies`, `filter_relationship_statuses`, `filter_countries` (JSON arrays; empty = all), `min_credits`, `max_credits` (nullable)
   - CSV: `send_at`
-- [ ] **1.3 `account_notifications`** (one row per delivery): `id`, `notification_id`, `account_id`, `visible_at`, `clicked_at` (nullable), `dedupe_key VARCHAR(64)`, `created_at`
+- [x] **1.3 `account_notifications`** (one row per delivery): `id`, `notification_id`, `account_id`, `visible_at`, `clicked_at` (nullable), `dedupe_key VARCHAR(64)`, `created_at`
   - `UNIQUE (notification_id, account_id, dedupe_key)` — EVENT: caller's event id · FILTER: `'YYYY-MM'` (UTC) · CSV: `'once'`
   - Index `(account_id, visible_at)` for the feed
-- [ ] **1.4 No SQL time defaults**: no `DEFAULT CURRENT_TIMESTAMP` / `ON UPDATE`; all timestamps written from the injected clock. All `DATETIME` values are UTC
-- [ ] **1.5 `db/seed.sql`**: sample accounts covering each filter dimension + one notification of each type
+- [x] **1.4 No SQL time defaults**: no `DEFAULT CURRENT_TIMESTAMP` / `ON UPDATE`; all timestamps written from the injected clock. All `DATETIME` values are UTC
+- [x] **1.5 `db/seed.sql`**: sample accounts covering each filter dimension + one notification of each type
 
 ## Phase 2 — Domain logic (`src/domain/`, pure, unit-tested)
 

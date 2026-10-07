@@ -1,2 +1,3 @@
 1. Spent about 1 hour creating project in claude md, spec/tasks file, working with claude code
 2. Initial scope had ~50 tasks plus additional open questions, pushed back to trim scope for project and documented decisions at end of tasks md. Chose a test DB approach, with only essential testing (logic, 1 integration test) to get started
+3. After Phase 1, checked claude's schema fix as it let NULL filter arrays through, the fix is approved
