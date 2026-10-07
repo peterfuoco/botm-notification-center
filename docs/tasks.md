@@ -57,16 +57,16 @@ Status legend: `[ ]` todo · `[~]` in progress · `[x]` done
 
 ## Phase 4 — Services (`src/services/`, one job per file, all take `now` from the clock)
 
-- [ ] **4.1 Create / update notification** — CSV has no editable `is_active`. Content edits show on existing deliveries (they reference the template); filter/delay edits affect future sends only. Update rejects removed notifications, fields that don't apply to the stored type, and a min/max credit range that's invalid once merged with stored values
-- [ ] **4.2 Activate** (EVENT/FILTER) — sets active; for FILTER, runs the filter sweep for that notification immediately. Rejects CSV and removed notifications (409)
-- [ ] **4.3 Deactivate** (EVENT/FILTER) — in **one transaction**: set inactive (the `UPDATE` locks the notification row), then delete its deliveries with `visible_at > now` (cancels pending delays / audiobook dates). Already-visible deliveries stay. Rejects CSV and removed notifications (409)
-- [ ] **4.4 Remove from app** — permanent; sets `removed_at` and `is_active = false`. Feed hides it for everyone
-- [ ] **4.5 Trigger event** — `{ eventId, accountId, eventType, occurredAt, publicationDate? }`; for each active, non-removed EVENT notification of that type, `INSERT IGNORE` a delivery with `dedupe_key = eventId` and computed `visible_at`. Every distinct event = a new notification (2 RAF friends → 2). Runs in a transaction that reads active notifications `FOR SHARE`, so it serializes with deactivate: either it sees the notification inactive, or deactivate waits and then deletes what it inserted
-- [ ] **4.6 Filter sweep** — plain function; for each active, **non-removed** FILTER notification, `INSERT IGNORE ... SELECT` matching accounts with `dedupe_key = monthKey(now)`, `visible_at = now`
-- [ ] **4.7 CSV recipients** — CSV notifications only; no `is_active` check (CSV is always stored inactive) but rejects removed. Parse raw text (2.6), reject over `MAX_CSV_IDS`, single `INSERT IGNORE ... SELECT` with `visible_at = max(send_at, now)`, `dedupe_key = 'once'`; returns `{ submitted, inserted, invalidLines, duplicateCount }`
-- [ ] **4.8 Member feed** — `visible_at <= now`, `visible_at >= visibilityCutoff(now)` (correct even if cleanup never ran), notification not removed, **no `is_active` check** (deactivated notifications stay visible to prior recipients), newest first, cursor-paginated; returns ISO `sentAt` + `isClicked`
-- [ ] **4.9 Mark clicked** — idempotent; only the caller's own, live delivery whose notification isn't removed; otherwise 404
-- [ ] **4.10 Cleanup** — plain function; hard-deletes deliveries older than `visibilityCutoff(now)`
+- [x] **4.1 Create / update notification** — CSV has no editable `is_active`. Content edits show on existing deliveries (they reference the template); filter/delay edits affect future sends only. Update rejects removed notifications, fields that don't apply to the stored type, and a min/max credit range that's invalid once merged with stored values
+- [x] **4.2 Activate** (EVENT/FILTER) — sets active; for FILTER, runs the filter sweep for that notification immediately. Rejects CSV and removed notifications (409)
+- [x] **4.3 Deactivate** (EVENT/FILTER) — in **one transaction**: set inactive (the `UPDATE` locks the notification row), then delete its deliveries with `visible_at > now` (cancels pending delays / audiobook dates). Already-visible deliveries stay. Rejects CSV and removed notifications (409)
+- [x] **4.4 Remove from app** — permanent; sets `removed_at` and `is_active = false`. Feed hides it for everyone
+- [x] **4.5 Trigger event** — `{ eventId, accountId, eventType, occurredAt, publicationDate? }`; for each active, non-removed EVENT notification of that type, `INSERT IGNORE` a delivery with `dedupe_key = eventId` and computed `visible_at`. Every distinct event = a new notification (2 RAF friends → 2). Runs in a transaction that reads active notifications `FOR SHARE`, so it serializes with deactivate: either it sees the notification inactive, or deactivate waits and then deletes what it inserted
+- [x] **4.6 Filter sweep** — plain function; for each active, **non-removed** FILTER notification, `INSERT IGNORE ... SELECT` matching accounts with `dedupe_key = monthKey(now)`, `visible_at = now`
+- [x] **4.7 CSV recipients** — CSV notifications only; no `is_active` check (CSV is always stored inactive) but rejects removed. Parse raw text (2.6), reject over `MAX_CSV_IDS`, single `INSERT IGNORE ... SELECT` with `visible_at = max(send_at, now)`, `dedupe_key = 'once'`; returns `{ submitted, inserted, invalidLines, duplicateCount }`
+- [x] **4.8 Member feed** — `visible_at <= now`, `visible_at >= visibilityCutoff(now)` (correct even if cleanup never ran), notification not removed, **no `is_active` check** (deactivated notifications stay visible to prior recipients), newest first, cursor-paginated; returns ISO `sentAt` + `isClicked`
+- [x] **4.9 Mark clicked** — idempotent; only the caller's own, live delivery whose notification isn't removed; otherwise 404
+- [x] **4.10 Cleanup** — plain function; hard-deletes deliveries older than `visibilityCutoff(now)`
 
 ## Phase 5 — HTTP layer (`src/routes/` + `src/controllers/`)
 
@@ -85,10 +85,10 @@ Member:
 - [ ] **5.7** `GET /me/notifications?cursor=&limit=`
 - [ ] **5.8** `POST /me/notifications/:id/click`
 
-## Phase 6 — Integration test (one)
+## Phase 6 — Integration tests
 
 - [x] **6.1 Test DB lifecycle** (`test/helpers/testDb.ts`): `beforeAll` creates a fresh `notifications_test` database and loads `db/schema.sql` into it; `afterAll` drops it. Never touches the dev DB
-- [ ] **6.2 End-to-end through services with the fake clock**:
+- [x] **6.2 End-to-end through services with the fake clock** (`test/integration/services.test.ts`, built alongside Phase 4):
   1. Create + activate an EVENT notification with a 5-day delay; trigger an event → feed empty
   2. Re-send the same `eventId` → still one delivery (idempotent)
   3. Advance clock 5 days → notification visible with correct `sentAt`; click it → `isClicked`
@@ -96,6 +96,7 @@ Member:
   5. FILTER: sweep twice in the same month → one delivery; advance to next month and sweep → second delivery
   6. Remove from app → hidden from feed; sweep does not re-send it
   7. Advance past the 2-month window → hidden from feed; cleanup deletes the rows
+  8. Deactivate vs. event trigger race, both orderings (row locks serialize them)
 
 ## Phase 7 — README & delivery
 

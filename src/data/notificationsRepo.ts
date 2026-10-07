@@ -13,6 +13,12 @@ import type { Db, NotificationsTable } from './database.js';
 
 type NotificationRow = Selectable<NotificationsTable>;
 
+/**
+ * Row lock for reads inside a transaction: 'update' for admin state changes, 'share' for
+ * writers that must not race them (event trigger, filter sweep).
+ */
+export type RowLock = 'update' | 'share';
+
 export async function insertNotification(
   db: Db,
   input: CreateNotificationInput,
@@ -50,12 +56,15 @@ export async function insertNotification(
   return created;
 }
 
-export async function findNotificationById(db: Db, id: number): Promise<Notification | undefined> {
-  const row = await db
-    .selectFrom('notifications')
-    .selectAll()
-    .where('id', '=', id)
-    .executeTakeFirst();
+export async function findNotificationById(
+  db: Db,
+  id: number,
+  options: { lock?: RowLock } = {},
+): Promise<Notification | undefined> {
+  let query = db.selectFrom('notifications').selectAll().where('id', '=', id);
+  if (options.lock === 'update') query = query.forUpdate();
+  if (options.lock === 'share') query = query.forShare();
+  const row = await query.executeTakeFirst();
   return row && toNotification(row);
 }
 
@@ -127,15 +136,18 @@ export async function markNotificationRemoved(db: Db, id: number, now: Date): Pr
 export async function listActiveEventNotifications(
   db: Db,
   eventType: EventType,
+  options: { lock?: RowLock } = {},
 ): Promise<EventNotification[]> {
-  const rows = await db
+  let query = db
     .selectFrom('notifications')
     .selectAll()
     .where('type', '=', 'EVENT')
     .where('event_type', '=', eventType)
     .where('is_active', '=', true)
-    .where('removed_at', 'is', null)
-    .execute();
+    .where('removed_at', 'is', null);
+  if (options.lock === 'update') query = query.forUpdate();
+  if (options.lock === 'share') query = query.forShare();
+  const rows = await query.execute();
   return rows.map(toNotification).filter((n): n is EventNotification => n.type === 'EVENT');
 }
 

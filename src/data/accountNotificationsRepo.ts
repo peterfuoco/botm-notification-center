@@ -1,4 +1,4 @@
-import type { AccountFilter } from '../domain/types.js';
+import type { AccountFilter, FeedCursor } from '../domain/types.js';
 import { accountFilterCondition } from './accountFilterCondition.js';
 import type { Db } from './database.js';
 
@@ -90,11 +90,6 @@ export async function insertDeliveriesForAccountIds(
     )
     .executeTakeFirst();
   return Number(result.numInsertedOrUpdatedRows ?? 0n);
-}
-
-export interface FeedCursor {
-  visibleAt: Date;
-  id: number;
 }
 
 export interface FeedRow {

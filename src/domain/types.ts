@@ -62,3 +62,9 @@ export interface CsvNotification extends NotificationBase {
 }
 
 export type Notification = EventNotification | FilterNotification | CsvNotification;
+
+/** Keyset position in a member's feed (newest first by visible_at, then id). */
+export interface FeedCursor {
+  visibleAt: Date;
+  id: number;
+}
