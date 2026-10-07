@@ -1,7 +1,15 @@
-# AI Workflow Log
+## Context
+Backend take-home for Book of the Month
+Requirements: docs/REQUIREMENTS.txt (i will add this later)
 
-Running notes for the README "Workflow" section: what was delegated, where I pushed back, what I did by hand.
+## Stack
+Node.js, TypeScript (strict, don't use 'any'), Koa, MySQL (for Aurora)
 
-| # | Step | Delegated to AI | My pushback / changes | Done by hand |
-|---|------|-----------------|-----------------------|--------------|
-| 1 | Plan + data model | Drafted DECISIONS.md: delivery table, 3 dedupe rules, mechanism table, API sketch | Deferred assumption review (§9) until I'd read the spec closely | Chose repo location, review-per-layer workflow, approved materialized-delivery mechanism |
+## Architecture
+- Organize one job per file, separation of concerns
+- Separate subfolders for routes, services, data, etc in src
+
+## Rules to Follow
+- Plan/Spec mode first for every task. Propose the full plan first
+- Implement each task at a time, and check with me before commiting and moving forward. Don't build ahead of the current task
+- After each task, run a npm typecheck and test`, then add a row to docs/AI_LOG.md (what was delegated, what I changed/pushed back on).
