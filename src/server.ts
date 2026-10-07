@@ -8,7 +8,7 @@ if (existsSync('.env')) process.loadEnvFile('.env');
 
 const config = loadConfig();
 const db = createDb(config.db);
-const app = createApp({ db, clock: systemClock });
+const app = createApp({ db, clock: systemClock, adminApiKey: config.adminApiKey });
 
 app.on('error', (err: unknown) => {
   console.error('Unhandled error', err);

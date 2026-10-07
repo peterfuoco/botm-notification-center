@@ -70,20 +70,20 @@ Status legend: `[ ]` todo · `[~]` in progress · `[x]` done
 
 ## Phase 5 — HTTP layer (`src/routes/` + `src/controllers/`)
 
-- [ ] **5.1 Auth stubs**: admin via `X-Admin-Key`, member via `X-Account-Id`; consistent error format
+- [x] **5.1 Auth stubs**: admin via `X-Admin-Key`, member via `X-Account-Id`; consistent error format
 
 Admin:
-- [ ] **5.2** `POST /admin/notifications`, `GET /admin/notifications`, `GET /admin/notifications/:id`, `PATCH /admin/notifications/:id`
-- [ ] **5.3** `POST /admin/notifications/:id/activate`, `/deactivate`, `/remove`
-- [ ] **5.4** `POST /admin/notifications/:id/recipients` — body is raw `text/csv`
-- [ ] **5.5** `POST /admin/maintenance/run` — runs filter sweep + cleanup (stand-in for a cron job)
+- [x] **5.2** `POST /admin/notifications`, `GET /admin/notifications`, `GET /admin/notifications/:id`, `PATCH /admin/notifications/:id`
+- [x] **5.3** `POST /admin/notifications/:id/activate`, `/deactivate`, `/remove`
+- [x] **5.4** `POST /admin/notifications/:id/recipients` — body is raw `text/csv`
+- [x] **5.5** `POST /admin/maintenance/run` — runs filter sweep + cleanup (stand-in for a cron job)
 
 Events (internal):
-- [ ] **5.6** `POST /events` — `{ eventId, accountId, eventType, occurredAt, publicationDate? }`
+- [x] **5.6** `POST /events` — `{ eventId, accountId, eventType, occurredAt, publicationDate? }`
 
 Member:
-- [ ] **5.7** `GET /me/notifications?cursor=&limit=`
-- [ ] **5.8** `POST /me/notifications/:id/click`
+- [x] **5.7** `GET /me/notifications?cursor=&limit=`
+- [x] **5.8** `POST /me/notifications/:id/click`
 
 ## Phase 6 — Integration tests
 
