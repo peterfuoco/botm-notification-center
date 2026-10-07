@@ -8,14 +8,14 @@ Status legend: `[ ]` todo · `[~]` in progress · `[x]` done
 
 ## Phase 0 — Project setup
 
-- [ ] **0.1 Tooling init**: `package.json`, TypeScript (`strict: true`, `noUncheckedIndexedAccess`), ESLint with `@typescript-eslint/no-explicit-any` as error, Prettier, `.gitignore`, `.nvmrc`
-- [ ] **0.2 npm scripts**: `dev`, `build`, `start`, `typecheck`, `lint`, `test`, `db:reset` (`docker compose down -v && docker compose up -d`)
-- [ ] **0.3 Docker Compose**: MySQL 8 (Aurora MySQL 3 compatible), healthcheck, mounts `db/schema.sql` + `db/seed.sql` into `/docker-entrypoint-initdb.d/` (dev DB only)
-- [ ] **0.4 Config module** (`src/config/`): typed env loading/validation, `.env.example`
-- [ ] **0.5 Folder skeleton**: `src/{routes,controllers,services,data,domain,lib,config}`, `test/{unit,integration}`
-- [ ] **0.6 Clock**: `Clock` interface (`now(): Date`) in `src/lib/clock.ts` — system clock for the app, fake/advanceable clock for tests. Injected into services; nothing calls `new Date()` or SQL `NOW()` directly
-- [ ] **0.7 Test harness**: Vitest config (unit + integration projects)
-- [ ] **0.8 Koa app bootstrap**: app factory taking deps (db, clock) so it's testable without listening; body parser (JSON + `text/csv` via `extendTypes`), JSON error handler, `GET /health`
+- [x] **0.1 Tooling init**: `package.json`, TypeScript (`strict: true`, `noUncheckedIndexedAccess`), ESLint with `@typescript-eslint/no-explicit-any` as error, Prettier, `.gitignore`, `.nvmrc`
+- [x] **0.2 npm scripts**: `dev`, `build`, `start`, `typecheck`, `lint`, `test`, `db:reset` (`docker compose down -v && docker compose up -d`)
+- [x] **0.3 Docker Compose**: MySQL 8 (Aurora MySQL 3 compatible), healthcheck, mounts `db/schema.sql` + `db/seed.sql` into `/docker-entrypoint-initdb.d/` (dev DB only)
+- [x] **0.4 Config module** (`src/config/`): typed env loading/validation, `.env.example`
+- [x] **0.5 Folder skeleton**: `src/{routes,controllers,services,data,domain,lib,config,middleware}`, `test/{unit,integration}`
+- [x] **0.6 Clock**: `Clock` interface (`now(): Date`) in `src/lib/clock.ts` — system clock for the app, fake/advanceable clock for tests. Injected into services; nothing calls `new Date()` or SQL `NOW()` directly
+- [x] **0.7 Test harness**: Vitest config (unit + integration projects)
+- [x] **0.8 Koa app bootstrap**: app factory taking deps (db, clock) so it's testable without listening; body parser (JSON + `text/csv` via `extendTypes`), JSON error handler, `GET /health`
 
 ## Phase 1 — Schema (`db/schema.sql`, single file, no migration runner)
 

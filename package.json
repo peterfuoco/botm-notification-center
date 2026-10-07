@@ -1,0 +1,43 @@
+{
+  "name": "botm-notification-center",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Member notification center (Book of the Month take-home)",
+  "license": "UNLICENSED",
+  "type": "module",
+  "engines": {
+    "node": ">=20.12"
+  },
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "start": "node dist/server.js",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "test": "vitest run --project unit",
+    "test:integration": "vitest run --project integration --passWithNoTests",
+    "test:all": "vitest run",
+    "db:up": "docker compose up -d --wait",
+    "db:reset": "docker compose down -v && docker compose up -d --wait"
+  },
+  "dependencies": {
+    "@koa/router": "^15.7.0",
+    "koa": "^3.2.1",
+    "koa-bodyparser": "^4.4.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/koa": "^3.0.3",
+    "@types/koa-bodyparser": "^4.3.13",
+    "@types/node": "^20.19.43",
+    "eslint": "^10.12.0",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.9.9",
+    "tsx": "^4.23.15",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.71.1",
+    "vitest": "^4.1.11"
+  }
+}
