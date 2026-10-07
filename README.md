@@ -82,7 +82,7 @@ printf 'account_id\n1\n2\n2\n999\nabc\n' | curl -s -X POST localhost:3000/admin/
 curl -s -X POST localhost:3000/admin/maintenance/run -H 'X-Admin-Key: local-admin-key'
 ```
 
-`scripts/smoke.sh` runs a 24-request manual pass over all of the above (events, replay, sweep, clicks, delay + deactivate, CSV, remove, error cases). I was testing locally and figured I'd add them to a script so these tests are reusable. Also I included the output from my run after a clean reset, in docs/smoke-results.txt
+`scripts/smoke.sh` runs a 24-request manual pass over all of the above (events, replay, sweep, clicks, delay + deactivate, CSV, remove, error cases). I was testing locally and figured I'd add them to a script so these tests are reusable. Also I included the output from my run after a clean reset, in [docs/smoke-results.txt](docs/smoke-results.txt)
 
 ---
 
