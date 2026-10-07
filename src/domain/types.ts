@@ -32,3 +32,33 @@ export interface AccountFilter {
   minCredits: number | null;
   maxCredits: number | null;
 }
+
+interface NotificationBase {
+  id: number;
+  iconUrl: string;
+  headline: string;
+  subheadline: string;
+  linkPath: string;
+  isActive: boolean;
+  removedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface EventNotification extends NotificationBase {
+  type: 'EVENT';
+  eventType: EventType;
+  delayDays: number | null;
+}
+
+export interface FilterNotification extends NotificationBase {
+  type: 'FILTER';
+  filter: AccountFilter;
+}
+
+export interface CsvNotification extends NotificationBase {
+  type: 'CSV';
+  sendAt: Date;
+}
+
+export type Notification = EventNotification | FilterNotification | CsvNotification;

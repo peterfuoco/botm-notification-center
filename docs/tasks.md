@@ -43,26 +43,29 @@ Status legend: `[ ]` todo · `[~]` in progress · `[x]` done
 
 ## Phase 3 — Data access (`src/data/`, one repo per file)
 
-- [ ] **3.1 Kysely instance**: mysql2 dialect pool with `timezone: 'Z'`; hand-written `Database` interface matching `schema.sql`
-- [ ] **3.2 `accountsRepo`**: get by id
-- [ ] **3.3 `notificationsRepo`**: create, get, list, update, set active, set removed, list active by event type, list active non-removed FILTER notifications
-- [ ] **3.4 `accountNotificationsRepo`**:
+- [x] **3.1 Kysely instance**: mysql2 dialect pool with `timezone: 'Z'`; hand-written `Database` interface matching `schema.sql`
+- [x] **3.2 `accountsRepo`**: get by id
+- [x] **3.3 `notificationsRepo`**: create, get, list, update, set active, set removed, list active by event type, list active non-removed FILTER notifications
+- [x] **3.4 `accountNotificationsRepo`**:
   - `INSERT IGNORE` single/bulk delivery
   - `INSERT IGNORE ... SELECT` from `accounts` for filter fan-out and CSV (`WHERE id IN (...)` skips unknown ids)
   - feed query, mark clicked, delete pending (`visible_at > now`) for a notification, delete expired (`visible_at < cutoff`)
   - every time comparison takes `now`/`cutoff` as a parameter — never `NOW()`
+  - feed uses keyset (cursor) paging on `(visible_at, id)` — kept after review
+  - mark clicked: scoped to the owning account and live deliveries (`visible_at <= now`); `COALESCE` keeps the first click time so repeat clicks succeed
+- [x] **3.5 Repository integration test** (`test/integration/repositories.test.ts`): 48 fixture accounts (every filter combination); SQL filter fan-out checked against `matchesFilter`; dedupe, feed window/order/paging, click ownership, pending/expired deletes
 
 ## Phase 4 — Services (`src/services/`, one job per file, all take `now` from the clock)
 
-- [ ] **4.1 Create / update notification** — CSV has no editable `is_active`. Content edits show on existing deliveries (they reference the template); filter/delay edits affect future sends only
-- [ ] **4.2 Activate** (EVENT/FILTER) — sets active; for FILTER, runs the filter sweep for that notification immediately
-- [ ] **4.3 Deactivate** (EVENT/FILTER) — sets inactive and deletes that notification's deliveries with `visible_at > now` (cancels pending delays / audiobook dates). Already-visible deliveries stay
+- [ ] **4.1 Create / update notification** — CSV has no editable `is_active`. Content edits show on existing deliveries (they reference the template); filter/delay edits affect future sends only. Update rejects removed notifications, fields that don't apply to the stored type, and a min/max credit range that's invalid once merged with stored values
+- [ ] **4.2 Activate** (EVENT/FILTER) — sets active; for FILTER, runs the filter sweep for that notification immediately. Rejects CSV and removed notifications (409)
+- [ ] **4.3 Deactivate** (EVENT/FILTER) — in **one transaction**: set inactive (the `UPDATE` locks the notification row), then delete its deliveries with `visible_at > now` (cancels pending delays / audiobook dates). Already-visible deliveries stay. Rejects CSV and removed notifications (409)
 - [ ] **4.4 Remove from app** — permanent; sets `removed_at` and `is_active = false`. Feed hides it for everyone
-- [ ] **4.5 Trigger event** — `{ eventId, accountId, eventType, occurredAt, publicationDate? }`; for each active, non-removed EVENT notification of that type, `INSERT IGNORE` a delivery with `dedupe_key = eventId` and computed `visible_at`. Every distinct event = a new notification (2 RAF friends → 2)
+- [ ] **4.5 Trigger event** — `{ eventId, accountId, eventType, occurredAt, publicationDate? }`; for each active, non-removed EVENT notification of that type, `INSERT IGNORE` a delivery with `dedupe_key = eventId` and computed `visible_at`. Every distinct event = a new notification (2 RAF friends → 2). Runs in a transaction that reads active notifications `FOR SHARE`, so it serializes with deactivate: either it sees the notification inactive, or deactivate waits and then deletes what it inserted
 - [ ] **4.6 Filter sweep** — plain function; for each active, **non-removed** FILTER notification, `INSERT IGNORE ... SELECT` matching accounts with `dedupe_key = monthKey(now)`, `visible_at = now`
-- [ ] **4.7 CSV recipients** — parse raw text (2.6), single `INSERT IGNORE ... SELECT` with `visible_at = send_at`, `dedupe_key = 'once'`; returns `{ submitted, inserted }`
-- [ ] **4.8 Member feed** — `visible_at <= now`, `visible_at >= visibilityCutoff(now)` (correct even if cleanup never ran), notification not removed, newest first, paginated; returns ISO `sentAt` + `isClicked`
-- [ ] **4.9 Mark clicked** — idempotent; only the caller's own delivery
+- [ ] **4.7 CSV recipients** — CSV notifications only; no `is_active` check (CSV is always stored inactive) but rejects removed. Parse raw text (2.6), reject over `MAX_CSV_IDS`, single `INSERT IGNORE ... SELECT` with `visible_at = max(send_at, now)`, `dedupe_key = 'once'`; returns `{ submitted, inserted, invalidLines, duplicateCount }`
+- [ ] **4.8 Member feed** — `visible_at <= now`, `visible_at >= visibilityCutoff(now)` (correct even if cleanup never ran), notification not removed, **no `is_active` check** (deactivated notifications stay visible to prior recipients), newest first, cursor-paginated; returns ISO `sentAt` + `isClicked`
+- [ ] **4.9 Mark clicked** — idempotent; only the caller's own, live delivery whose notification isn't removed; otherwise 404
 - [ ] **4.10 Cleanup** — plain function; hard-deletes deliveries older than `visibilityCutoff(now)`
 
 ## Phase 5 — HTTP layer (`src/routes/` + `src/controllers/`)
@@ -84,7 +87,7 @@ Member:
 
 ## Phase 6 — Integration test (one)
 
-- [ ] **6.1 Test DB lifecycle**: `beforeAll` creates a fresh `notifications_test` database and loads `db/schema.sql` into it; `afterAll` drops it. Never touches the dev DB
+- [x] **6.1 Test DB lifecycle** (`test/helpers/testDb.ts`): `beforeAll` creates a fresh `notifications_test` database and loads `db/schema.sql` into it; `afterAll` drops it. Never touches the dev DB
 - [ ] **6.2 End-to-end through services with the fake clock**:
   1. Create + activate an EVENT notification with a 5-day delay; trigger an event → feed empty
   2. Re-send the same `eventId` → still one delivery (idempotent)
@@ -111,7 +114,10 @@ Member:
 - **2-month window**: current + previous UTC calendar month. Sent Aug 15 → visible through Sep 30, gone Oct 1. Feed enforces it; cleanup just reclaims rows.
 - **Filter re-send**: once per UTC calendar month (`dedupe_key = 'YYYY-MM'`).
 - **Time**: UTC everywhere. mysql2 pool `timezone: 'Z'`. All time comparisons use the injected clock's `now`, never SQL `NOW()`.
-- **Deactivate**: cancels pending deliveries (`visible_at > now`); visible ones stay.
+- **Deactivate**: cancels pending deliveries (`visible_at > now`); visible ones stay. Runs in one transaction; event triggers read `FOR SHARE` so the two serialize.
+- **Activate / deactivate**: EVENT and FILTER only; CSV and removed notifications are rejected (409).
+- **CSV upload after `send_at`**: `visible_at = max(send_at, now)` so it doesn't read as sent in the past.
+- **Clicks**: owner only, live only, first click time kept; repeat clicks succeed.
 - **Remove from app**: permanent; also deactivates. Excluded from feed and from the filter sweep.
 - **Edits after go-live**: content edits apply everywhere; filter/delay edits affect future sends only.
 - **Idempotency**: single `dedupe_key` column — event id / month / `'once'`. No events table.

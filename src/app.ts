@@ -1,10 +1,12 @@
 import Koa from 'koa';
 import bodyParser from 'koa-bodyparser';
+import type { Db } from './data/database.js';
 import type { Clock } from './lib/clock.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { healthRoutes } from './routes/healthRoutes.js';
 
 export interface AppDeps {
+  db: Db;
   clock: Clock;
 }
 
@@ -23,7 +25,7 @@ export function createApp(deps: AppDeps): Koa {
     }),
   );
 
-  const health = healthRoutes(deps.clock);
+  const health = healthRoutes(deps);
   app.use(health.routes()).use(health.allowedMethods());
 
   return app;

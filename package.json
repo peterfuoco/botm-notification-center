@@ -25,6 +25,8 @@
     "@koa/router": "^15.7.0",
     "koa": "^3.2.1",
     "koa-bodyparser": "^4.4.1",
+    "kysely": "^0.28.17",
+    "mysql2": "^3.24.5",
     "zod": "^4.6.5"
   },
   "devDependencies": {
